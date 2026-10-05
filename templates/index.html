@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Task Manager</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+  </head>
+  <body>
+    <main class="container">
+      <h1>Task Manager</h1>
+
+      <form action="{{ url_for('add_task') }}" method="post" class="task-form">
+        <div class="field-row">
+          <input type="text" name="title" placeholder="Add a task" required />
+          <select name="priority">
+            <option value="low">Low</option>
+            <option value="medium" selected>Medium</option>
+            <option value="high">High</option>
+          </select>
+          <input type="text" name="category" placeholder="Category" />
+          <input type="date" name="due_date" />
+        </div>
+        <textarea name="notes" rows="3" placeholder="Optional notes"></textarea>
+        <button type="submit">Add Task</button>
+      </form>
+
+      <form action="{{ url_for('index') }}" method="get" class="toolbar">
+        <div class="search-row">
+          <input type="text" name="q" value="{{ query }}" placeholder="Search tasks or notes" />
+          <select name="status">
+            <option value="all" {% if status == 'all' %}selected{% endif %}>All</option>
+            <option value="active" {% if status == 'active' %}selected{% endif %}>Active</option>
+            <option value="done" {% if status == 'done' %}selected{% endif %}>Done</option>
+          </select>
+          <button type="submit" class="secondary">Apply</button>
+        </div>
+      </form>
+
+      <section class="summary">
+        <div class="stat-card total">
+          <span class="label">Total</span>
+          <strong>{{ total }}</strong>
+        </div>
+        <div class="stat-card active">
+          <span class="label">Active</span>
+          <strong>{{ total_active }}</strong>
+        </div>
+        <div class="stat-card done">
+          <span class="label">Done</span>
+          <strong>{{ total_done }}</strong>
+        </div>
+        <div class="stat-card overdue">
+          <span class="label">Overdue</span>
+          <strong>{{ overdue }}</strong>
+        </div>
+      </section>
+
+      <ul class="task-list">
+        {% if not tasks %}
+          <li class="empty-state">No tasks match your current filter. Add one above or clear the search.</li>
+        {% else %}
+          {% for task in tasks %}
+            <li class="task-item {% if task.done %}done{% endif %} {% if task.due_date and not task.done and task.due_date < today %}overdue-item{% endif %}">
+              <div class="task-main">
+                <div class="task-header">
+                  <strong>{{ task.title }}</strong>
+                  {% if task.due_date and not task.done and task.due_date < today %}
+                    <span class="overdue-pill">Overdue</span>
+                  {% endif %}
+                </div>
+                {% if task.category %}
+                  <div class="category">{{ task.category }}</div>
+                {% endif %}
+                {% if task.notes %}
+                  <div class="notes">{{ task.notes }}</div>
+                {% endif %}
+                <div class="meta">
+                  <span class="badge priority-{{ task.priority }}">{{ task.priority | upper }}</span>
+                  {% if task.due_date %}
+                    <span>Due: {{ task.due_date }}</span>
+                  {% endif %}
+                </div>
+              </div>
+              <div class="task-actions">
+                {% if not task.done %}
+                  <form action="{{ url_for('mark_done', task_id=task.id) }}" method="post">
+                    <button type="submit" class="success">Done</button>
+                  </form>
+                {% endif %}
+                <form action="{{ url_for('delete_task', task_id=task.id) }}" method="post">
+                  <button type="submit" class="danger">Delete</button>
+                </form>
+              </div>
+            </li>
+          {% endfor %}
+        {% endif %}
+      </ul>
+    </main>
+  </body>
+</html>

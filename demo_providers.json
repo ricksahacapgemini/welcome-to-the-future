@@ -1,0 +1,18 @@
+{
+  "research_demo": {
+    "demo": true,
+    "capabilities": ["research"]
+  },
+  "coding_demo": {
+    "demo": true,
+    "capabilities": ["coding"]
+  },
+  "verification_demo": {
+    "demo": true,
+    "capabilities": ["verification"]
+  },
+  "review_demo": {
+    "demo": true,
+    "capabilities": ["review"]
+  }
+}

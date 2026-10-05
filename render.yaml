@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: welcome-to-the-future
+    runtime: python
+    buildCommand: pip install -e .
+    startCommand: gunicorn wsgi:app --bind 0.0.0.0:$PORT --workers 1 --threads 4 --access-logfile - --error-logfile -
+    healthCheckPath: /healthz
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.14.8

@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#eaf2ed" />
+    <title>Welcome to the Future</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='future.css') }}" />
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="{{ url_for('index') }}" aria-label="Welcome to the Future home">
+        <span class="brand-mark" aria-hidden="true">W</span>
+        <span>Welcome to the Future</span>
+      </a>
+      <span class="privacy-note">Your details are not saved</span>
+    </header>
+
+    <main class="page-shell {% if reading %}has-reading{% endif %}">
+      <section class="intro" aria-labelledby="page-title">
+        <div class="intro-copy">
+          <p class="eyebrow">A reflective reading, made for you</p>
+          <h1 id="page-title">The future is<br /><em>yours to shape.</em></h1>
+          <p class="intro-text">Explore a little astrology and numerology, then turn the symbols into questions for your own life.</p>
+          <p class="truth-note"><strong>A note on accuracy</strong> Birthplace and time are used for chart placements. Astrology and numerology are reflective traditions, not scientifically validated ways to know future events or personal status.</p>
+        </div>
+        <div class="sky-mark" aria-hidden="true">
+          <div class="orbit orbit-one"></div>
+          <div class="orbit orbit-two"></div>
+          <span class="star star-one">✳</span>
+          <span class="star star-two">✦</span>
+          <span class="star star-three">·</span>
+          <span class="sky-center">∞</span>
+        </div>
+      </section>
+
+      <section class="workspace {% if reading %}has-reading{% endif %}" aria-label="Birth details and reading">
+        <form class="birth-form" action="{{ url_for('reading') }}" method="post">
+          <div class="form-heading">
+            <p class="eyebrow">Start with your details</p>
+            <h2>Your birth profile</h2>
+            <p>Enter your birth date, local time, and city/country.</p>
+          </div>
+
+          {% if error %}
+            <p class="form-error" role="alert">{{ error }}</p>
+          {% endif %}
+
+          <label for="name">Name <span>optional</span></label>
+          <input id="name" name="name" type="text" autocomplete="given-name" placeholder="What should we call you?" value="{{ form.get('name', '') if form else '' }}" />
+
+          <div class="input-pair">
+            <div>
+              <label for="birth_date">Birth date</label>
+              <input id="birth_date" name="birth_date" type="date" required value="{{ profile.birth_date if profile else (form.get('birth_date', '') if form else '') }}" />
+            </div>
+            <div>
+              <label for="birth_time">Birth time</label>
+              <input id="birth_time" name="birth_time" type="time" required value="{{ profile.birth_time if profile else (form.get('birth_time', '') if form else '') }}" />
+            </div>
+          </div>
+
+          <label for="birth_location">Birthplace <span>city, country</span></label>
+          <input id="birth_location" name="birth_location" type="text" autocomplete="address-level2" placeholder="For example, London, United Kingdom" required value="{{ profile.birth_location if profile else (form.get('birth_location', '') if form else '') }}" />
+          <p class="field-hint">You may include a region, for example, New Delhi, Delhi, India. If your locality is not listed offline, use a nearby larger city; chart angles may then be approximate.</p>
+
+          <label for="future_focus">Future prediction <span>optional topic</span></label>
+          <textarea id="future_focus" name="future_focus" rows="3" placeholder="What would you like to think about? Work, relationships, study...">{{ profile.future_focus if profile else (form.get('future_focus', '') if form else '') }}</textarea>
+          <p class="field-hint">No method can know exact future events. Your topic guides a practical reflection, not a guaranteed prediction.</p>
+
+          <div class="form-actions">
+            <button type="submit" class="primary-button">Explore my reading <span aria-hidden="true">→</span></button>
+            <button type="submit" class="past-button" formaction="{{ url_for('past_life') }}">Past-life reflection <span aria-hidden="true">↗</span></button>
+          </div>
+        </form>
+
+        <section class="reading-panel" aria-live="polite" aria-label="Your reading">
+          {% if reading %}
+            <div class="reading-heading">
+              <p class="eyebrow">{{ 'Your chart and a story to imagine' if show_past_life else 'Your calculated natal chart' }}</p>
+              <h2>{{ 'Professional life reading' if reading.career_focus else ((profile.name ~ ', here is your reflection') if profile.name else 'A reflection for you') }}</h2>
+              <p class="reading-date">Born {{ profile.birth_date }} · {{ reading.birth_time }} · {{ profile.birth_location }} · {{ reading.timezone }}</p>
+            </div>
+            <section class="birth-chart" aria-label="Calculated astrology chart">
+              <div class="chart-heading">
+                <div>
+                  <p class="result-index">WESTERN TROPICAL CHART</p>
+                  <h3>Your birth chart</h3>
+                </div>
+                <p>Planet positions use your local birth time and an offline city-center location match.</p>
+              </div>
+              <div class="chart-body">
+                <div class="wheel-wrap">
+                  <svg class="zodiac-wheel" viewBox="0 0 500 500" role="img" aria-labelledby="wheel-title wheel-description">
+                    <title id="wheel-title">Your calculated zodiac chart</title>
+                    <desc id="wheel-description">A twelve-sign zodiac wheel with your Sun, Moon, planetary, Rising, and Midheaven placements marked by longitude.</desc>
+                    <circle class="wheel-outer" cx="250" cy="250" r="235" />
+                    <circle class="wheel-band" cx="250" cy="250" r="216" />
+                    <circle class="wheel-inner" cx="250" cy="250" r="151" />
+                    <circle class="wheel-core" cx="250" cy="250" r="94" />
+                    {% for index in range(12) %}
+                      <line class="wheel-spoke" x1="250" y1="34" x2="250" y2="99" transform="rotate({{ index * 30 }} 250 250)" />
+                    {% endfor %}
+                    {% for zodiac_sign in reading.wheel_signs %}
+                      <text class="wheel-sign" x="{{ zodiac_sign.x }}" y="{{ zodiac_sign.y }}">{{ zodiac_sign.label }}</text>
+                    {% endfor %}
+                    {% for point in reading.wheel_points %}
+                      <g class="wheel-point {{ 'point-' ~ (point.name | lower) }}" data-chart-point="{{ point.name | lower }}" tabindex="0" role="img" aria-label="{{ point.name }} at {{ '%.2f' | format(point.degree) }} degrees {{ point.sign }}">
+                        <circle cx="{{ point.x }}" cy="{{ point.y }}" r="{{ 6 if point.name in ['Sun', 'Moon', 'Rising', 'Midheaven'] else 4.5 }}" />
+                        <title>{{ point.name }} · {{ point.sign }} {{ '%.2f' | format(point.degree) }}°</title>
+                      </g>
+                    {% endfor %}
+                    <text class="wheel-center-label" x="250" y="239" text-anchor="middle">NATAL</text>
+                    <text class="wheel-center-date" x="250" y="265" text-anchor="middle">{{ profile.birth_date }}</text>
+                  </svg>
+                  <div class="wheel-legend" aria-label="Chart point legend">
+                    <span><i class="legend-dot sun-dot"></i>Sun</span>
+                    <span><i class="legend-dot moon-dot"></i>Moon</span>
+                    <span><i class="legend-dot angle-dot"></i>Angles</span>
+                    <span><i class="legend-dot planet-dot"></i>Planets</span>
+                  </div>
+                </div>
+                <div class="placement-grid">
+                  {% for planet, placement in reading.placements.items() %}
+                    <article class="placement" data-placement="{{ planet | lower }}">
+                      <span>{{ planet }}</span>
+                      <strong>{{ placement.sign }}</strong>
+                      <small>{{ "%.2f" | format(placement.degree) }}°</small>
+                    </article>
+                  {% endfor %}
+                </div>
+              </div>
+            </section>
+            <div class="reading-grid">
+              <article class="result-card career-card">
+                <span class="result-index">PERSONAL PATTERNS</span>
+                <h3>Personal life</h3>
+                <p>{{ reading.personal_analysis }}</p>
+              </article>
+              <article class="result-card zodiac-card">
+                <span class="result-index">01 / SUN SIGN</span>
+                <h3>{{ reading.sign }}</h3>
+                <p>{{ reading.astrology_reflection }}</p>
+              </article>
+              <article class="result-card number-card">
+                <span class="result-index">02 / NUMEROLOGY</span>
+                <h3>Life path {{ reading.life_path }}</h3>
+                <p>{{ reading.number_reflection }}</p>
+              </article>
+              <article class="result-card relationship-card">
+                <span class="result-index">RELATIONSHIPS / VENUS + MOON</span>
+                <h3>Relationships</h3>
+                <p>{{ reading.relationship_analysis }}</p>
+              </article>
+              <article class="result-card family-card">
+                <span class="result-index">FAMILY / MOON</span>
+                <h3>Family and belonging</h3>
+                <p>{{ reading.family_analysis }}</p>
+              </article>
+              <article class="result-card future-card">
+                <span class="result-index">03 / FUTURE FOCUS</span>
+                <h3>Future prediction</h3>
+                <p>{{ reading.future_reflection }}</p>
+              </article>
+              <article class="result-card career-card">
+                <span class="result-index">CAREER / MIDHEAVEN + SATURN</span>
+                <h3>Professional life</h3>
+                <p>{{ reading.career_analysis }}</p>
+              </article>
+              {% if show_past_life %}
+                <article class="past-life-result">
+                  <span class="result-index">IMAGINATION</span>
+                  <h3>Past-life reflection</h3>
+                  <p>{{ reading.past_life }}</p>
+                  <small>This is an imaginative prompt, not evidence of a real past life.</small>
+                </article>
+              {% endif %}
+            </div>
+            <p class="location-notice">{{ reading.location_notice }}</p>
+            <p class="result-disclaimer">Astrology and numerology are not scientifically validated predictors. These readings cannot establish relationship status, family status, or future events.</p>
+          {% else %}
+            <div class="empty-reading">
+              <span class="empty-symbol" aria-hidden="true">✳</span>
+              <p class="eyebrow">Your reading will appear here</p>
+              <h2>Start with a date.<br /><em>Leave room for possibility.</em></h2>
+              <p>Your birth details stay in this browser request and are not written to a file or database.</p>
+            </div>
+          {% endif %}
+        </section>
+      </section>
+
+      <footer class="page-footer">
+        <span>For reflection and entertainment</span>
+        <span>Not a factual prediction</span>
+      </footer>
+    </main>
+  </body>
+</html>

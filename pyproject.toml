@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "self-dependent-ai"
+version = "0.1.0"
+description = "A bounded, approval-based coding agent prototype"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "Flask>=3.0,<4.0",
+    "gunicorn>=23.0,<24.0",
+    "geonamescache>=3.0,<4.0",
+    "skyfield>=1.55,<2.0",
+    "skyfield-data>=7.0,<8.0",
+    "timezonefinder>=9.0,<10.0",
+    "tzdata>=2024.1",
+]
+
+[project.scripts]
+self-dependent-ai = "self_dependent_ai.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["self_dependent_ai*"]
